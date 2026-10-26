@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { mobileNav, useMobileBack } from '../../utils/mobileNavigation';
 import React, { useState } from 'react';
 import { useContractStore } from '../../store/useContractStore';
 import {
@@ -20,9 +22,16 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     selectDraft,
     createDraft,
     toast,
+    showToast,
   } = useContractStore();
 
   const [scenarioOpen, setScenarioOpen] = useState(false);
+  useEffect(() => {
+    mobileNav.init(showToast);
+  }, [showToast]);
+
+  useMobileBack(scenarioOpen, () => setScenarioOpen(false), 'scenario-modal');
+
 
   const isReviewer = ['inspector', 'inspector2'].includes(user.role);
   const roleName =

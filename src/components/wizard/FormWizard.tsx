@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { mobileNav, useMobileBack } from '../../utils/mobileNavigation';
 import React, { useState } from 'react';
 import { useContractStore } from '../../store/useContractStore';
 import { CustomerDossierBar } from './CustomerDossierBar';
@@ -50,6 +52,42 @@ export const FormWizard: React.FC = () => {
   const [confirmSaleModal, setConfirmSaleModal] = useState(false);
   const [saleDateInput, setSaleDateInput] = useState(localDay());
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [cameraModalConfig, setCameraModalConfig] = useState<{
+    isOpen: boolean;
+    key: string;
+    label: string;
+    mode: CameraGuideMode;
+  } | null>(null);
+
+
+  // Mobile Back Handlers for Modals
+  useMobileBack(!!cameraModalConfig?.isOpen, () => setCameraModalConfig(null), 'camera-modal');
+  useMobileBack(confirmSaleModal, () => setConfirmSaleModal(false), 'confirm-sale-modal');
+
+  // Track Wizard Steps and Root navigation for mobile back button
+  const prevStepRef = useRef(activeStep);
+
+  useEffect(() => {
+    mobileNav.push('wizard-root', () => {
+      selectDraft('', 0, 'tasks');
+    });
+
+    return () => {
+      mobileNav.popById('wizard-root');
+    };
+  }, [selectDraft]);
+
+  useEffect(() => {
+    if (activeStep > prevStepRef.current) {
+      const fromStep = prevStepRef.current;
+      const targetStep = activeStep;
+      const stepId = `wizard-step-${targetStep}`;
+      mobileNav.push(stepId, () => {
+        setActiveStep(fromStep);
+      });
+    }
+    prevStepRef.current = activeStep;
+  }, [activeStep, setActiveStep]);
 
   if (!activeDraft) {
     return (
@@ -138,13 +176,6 @@ export const FormWizard: React.FC = () => {
     });
     showToast(`เพิ่มรูปภาพสาธิต ${label} แล้ว`);
   };
-  // Step 6 Live Camera with Guideline Overlays
-  const [cameraModalConfig, setCameraModalConfig] = useState<{
-    isOpen: boolean;
-    key: string;
-    label: string;
-    mode: CameraGuideMode;
-  } | null>(null);
 
   const openLiveCamera = (key: string, label: string) => {
     let mode: CameraGuideMode = 'general';
@@ -972,7 +1003,15 @@ export const FormWizard: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-3 md:p-4 px-3 sm:px-4 md:px-8 flex items-center justify-between gap-2 sm:gap-3 shadow-sheet safe-bottom">
         <button
           type="button"
-          onClick={() => canGoPrev && setActiveStep(activeStep - 1)}
+          onClick={() => {
+            if (canGoPrev) {
+              if (mobileNav.depth > 1) {
+                mobileNav.back();
+              } else {
+                setActiveStep(activeStep - 1);
+              }
+            }
+          }}
           disabled={!canGoPrev}
           className="shrink-0 whitespace-nowrap inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
         >

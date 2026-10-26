@@ -1,3 +1,4 @@
+import { mobileNav } from '../utils/mobileNavigation';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ContractDraft, UserRole } from '../types/contract';
 import {
@@ -136,6 +137,9 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const selectDraft = useCallback(
     (id: string, step = 0, view: 'tasks' | 'editor' | 'detail' = 'editor') => {
+      if (view === 'tasks') {
+        mobileNav.clearToRoot();
+      }
       setActiveDraftId(id);
       setActiveStep(step);
       setCurrentView(view);

@@ -1,3 +1,4 @@
+import { useMobileBack } from '../../utils/mobileNavigation';
 import React from 'react';
 import { useContractStore } from '../../store/useContractStore';
 import {
@@ -12,6 +13,8 @@ import { HistoryReport } from '../wizard/HistoryReport';
 
 export const DetailView: React.FC = () => {
   const { activeDraft, selectDraft, showToast, user } = useContractStore();
+
+  useMobileBack(true, () => selectDraft('', 0, 'tasks'), 'detail-view');
 
   if (!activeDraft) return null;
 
