@@ -19,23 +19,26 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   mode = 'general',
   title = 'ถ่ายรูป',
 }) => {
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState<boolean>(false);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
 
+  const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileFallbackRef = useRef<HTMLInputElement | null>(null);
 
-  // Stop media stream tracks
+  // Stop media stream tracks cleanly without triggering re-renders
   const stopStream = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
-  }, [stream]);
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
 
   // Start media stream
   const startCamera = useCallback(
@@ -44,7 +47,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       setCameraError(null);
       stopStream();
 
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError('เบราว์เซอร์นี้ไม่รองรับการเปิดกล้องโดยตรง กรุณาใช้การถ่ายผ่านระบบปกติ');
         setIsStarting(false);
         return;
@@ -53,19 +56,28 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: facing,
+            facingMode: { ideal: facing },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
           },
           audio: false,
         });
 
-        setStream(mediaStream);
+        streamRef.current = mediaStream;
         if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.play().catch(() => {
-            // Ignore auto-play errors if any
-          });
+          const video = videoRef.current;
+          video.srcObject = mediaStream;
+          video.onloadedmetadata = () => {
+            video.play().catch(() => {});
+            setIsStarting(false);
+          };
+          // Safety fallback if metadata already loaded
+          setTimeout(() => {
+            video.play().catch(() => {});
+            setIsStarting(false);
+          }, 500);
+        } else {
+          setIsStarting(false);
         }
       } catch (err: unknown) {
         const error = err as { name?: string; message?: string };
@@ -76,14 +88,13 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         } else {
           setCameraError('ไม่สามารถเปิดกล้องได้ กรุณาใช้การถ่ายรูปผ่านกล้องมาตรฐาน');
         }
-      } finally {
         setIsStarting(false);
       }
     },
     [stopStream]
   );
 
-  // When modal opens/closes
+  // When modal opens or camera facing mode changes
   useEffect(() => {
     if (isOpen) {
       setCapturedPhoto(null);
@@ -152,7 +163,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   // Retake photo
   const handleRetake = () => {
     setCapturedPhoto(null);
-    if (videoRef.current && stream) {
+    if (videoRef.current && streamRef.current) {
       videoRef.current.play().catch(() => {});
     }
   };
