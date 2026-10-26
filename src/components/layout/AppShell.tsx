@@ -41,7 +41,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
       {/* Desktop Sidebar */}
       <aside className="side" aria-label="แถบเมนูเดสก์ท็อป">
-        <div className="side-brand">
+        <div className="side-brand flex items-center gap-3">
+          <img
+            src="/pwa-192x192.png"
+            alt="สยามชัย"
+            className="w-10 h-10 rounded-xl object-contain shadow-sm shrink-0"
+          />
           <div className="brand" translate="no">
             สยามชัย
             <small>CONTRACT WORKSPACE</small>
@@ -126,9 +131,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         {/* Topbar */}
         <header className="topbar">
           <div className="mobile-brand flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-white text-red-600 font-black flex items-center justify-center text-sm shadow-sm shrink-0">
-              ส
-            </div>
+            <img
+              src="/pwa-192x192.png"
+              alt="สยามชัย"
+              className="w-8 h-8 rounded-lg object-contain shadow-sm shrink-0"
+            />
             <div className="min-w-0">
               <div className="text-sm font-bold text-white leading-tight">สยามชัย</div>
               <div className="text-[10px] text-white/80 leading-tight truncate">
