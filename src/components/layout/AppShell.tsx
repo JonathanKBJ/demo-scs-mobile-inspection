@@ -44,7 +44,17 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return (
     <div className={currentView === 'editor' ? 'editor' : ''}>
       {/* Accessibility skip link */}
-      <a className="skip-link" href="#main-content">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          // Move accessibility focus without adding a fragment history entry.
+          event.preventDefault();
+          const main = document.getElementById('main-content');
+          main?.focus({ preventScroll: true });
+          main?.scrollIntoView();
+        }}
+      >
         ข้ามไปเนื้อหาหลัก
       </a>
 

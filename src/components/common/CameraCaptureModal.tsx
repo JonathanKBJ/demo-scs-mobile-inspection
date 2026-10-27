@@ -28,14 +28,21 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileFallbackRef = useRef<HTMLInputElement | null>(null);
+  const cameraRequestRef = useRef(0);
 
   // Stop media stream tracks cleanly without triggering re-renders
   const stopStream = useCallback(() => {
+    // Invalidate pending permission requests before stopping the active stream.
+    cameraRequestRef.current += 1;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     if (videoRef.current) {
+      videoRef.current.onloadedmetadata = null;
+      videoRef.current.onloadeddata = null;
+      videoRef.current.onplaying = null;
+      videoRef.current.onresize = null;
       videoRef.current.srcObject = null;
     }
   }, []);
@@ -46,6 +53,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       setIsStarting(true);
       setCameraError(null);
       stopStream();
+      const requestId = cameraRequestRef.current;
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError('เบราว์เซอร์นี้ไม่รองรับการเปิดกล้องโดยตรง กรุณาใช้การถ่ายผ่านระบบปกติ');
@@ -63,23 +71,29 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
           audio: false,
         });
 
-        streamRef.current = mediaStream;
-        if (videoRef.current) {
-          const video = videoRef.current;
-          video.srcObject = mediaStream;
-          video.onloadedmetadata = () => {
-            video.play().catch(() => {});
-            setIsStarting(false);
-          };
-          // Safety fallback if metadata already loaded
-          setTimeout(() => {
-            video.play().catch(() => {});
-            setIsStarting(false);
-          }, 500);
-        } else {
-          setIsStarting(false);
+        const video = videoRef.current;
+        if (requestId !== cameraRequestRef.current || !video) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          return;
         }
+
+        streamRef.current = mediaStream;
+        const updateReadiness = () => {
+          if (requestId !== cameraRequestRef.current || video.srcObject !== mediaStream) return;
+          setIsStarting(video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0);
+        };
+        video.onloadedmetadata = () => {
+          video.play().catch(() => {});
+          updateReadiness();
+        };
+        video.onloadeddata = updateReadiness;
+        video.onplaying = updateReadiness;
+        video.onresize = updateReadiness;
+        video.srcObject = mediaStream;
+        video.play().catch(() => {});
+        updateReadiness();
       } catch (err: unknown) {
+        if (requestId !== cameraRequestRef.current) return;
         const error = err as { name?: string; message?: string };
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
           setCameraError('ไม่ได้รับอนุญาตให้เข้าถึงกล้อง กรุณาเปิดการอนุญาตในเบราว์เซอร์ หรือเลือกไฟล์จากเครื่อง');
@@ -118,7 +132,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   // Capture frame to canvas
   const handleShutter = () => {
     const video = videoRef.current;
-    if (!video || !video.videoWidth || !video.videoHeight) return;
+    if (!video || video.srcObject !== streamRef.current || video.readyState < 2 ||
+        !video.videoWidth || !video.videoHeight) return;
 
     // Trigger visual flash
     setIsFlashing(true);
@@ -223,16 +238,15 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
       {/* Viewfinder / Video Feed Area */}
       <div className="relative flex-1 w-full h-full flex items-center justify-center bg-black overflow-hidden">
-        {/* Live Video */}
-        {!capturedPhoto && (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
-          />
-        )}
+        {/* Keep the stream attached during preview so retake needs no camera restart. */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          aria-hidden={!!capturedPhoto}
+          className={`absolute inset-0 w-full h-full object-cover ${capturedPhoto ? 'invisible' : ''} ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+        />
 
         {/* Captured Preview */}
         {capturedPhoto && (

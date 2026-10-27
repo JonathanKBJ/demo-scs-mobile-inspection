@@ -60,34 +60,33 @@ export const FormWizard: React.FC = () => {
   } | null>(null);
 
 
-  // Mobile Back Handlers for Modals
+  useMobileBack(true, () => selectDraft('', 0, 'tasks'), 'wizard-root');
   useMobileBack(!!cameraModalConfig?.isOpen, () => setCameraModalConfig(null), 'camera-modal');
   useMobileBack(confirmSaleModal, () => setConfirmSaleModal(false), 'confirm-sale-modal');
 
-  // Track Wizard Steps and Root navigation for mobile back button
   const prevStepRef = useRef(activeStep);
+  const stepSequenceRef = useRef(0);
+  const stepHistoryRef = useRef<{ id: string; dispose: () => void }[]>([]);
 
   useEffect(() => {
-    mobileNav.push('wizard-root', () => {
-      selectDraft('', 0, 'tasks');
+    if (activeStep === prevStepRef.current) return;
+    const fromStep = prevStepRef.current;
+    const id = `wizard-step-${++stepSequenceRef.current}`;
+    const dispose = mobileNav.push(id, () => {
+      const index = stepHistoryRef.current.findIndex((entry) => entry.id === id);
+      if (index !== -1) stepHistoryRef.current.splice(index, 1);
+      // A history-driven step change consumes its existing entry, not a new visit.
+      prevStepRef.current = fromStep;
+      setActiveStep(fromStep);
     });
-
-    return () => {
-      mobileNav.popById('wizard-root');
-    };
-  }, [selectDraft]);
-
-  useEffect(() => {
-    if (activeStep > prevStepRef.current) {
-      const fromStep = prevStepRef.current;
-      const targetStep = activeStep;
-      const stepId = `wizard-step-${targetStep}`;
-      mobileNav.push(stepId, () => {
-        setActiveStep(fromStep);
-      });
-    }
+    stepHistoryRef.current.push({ id, dispose });
     prevStepRef.current = activeStep;
   }, [activeStep, setActiveStep]);
+
+  useEffect(() => () => {
+    for (const entry of stepHistoryRef.current) entry.dispose();
+    stepHistoryRef.current = [];
+  }, []);
 
   if (!activeDraft) {
     return (
@@ -1005,9 +1004,10 @@ export const FormWizard: React.FC = () => {
           type="button"
           onClick={() => {
             if (canGoPrev) {
-              if (mobileNav.depth > 1) {
+              if (stepHistoryRef.current.length > 0) {
                 mobileNav.back();
               } else {
+                prevStepRef.current = activeStep - 1;
                 setActiveStep(activeStep - 1);
               }
             }
