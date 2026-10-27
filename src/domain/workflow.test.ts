@@ -27,6 +27,11 @@ import {
 } from './calculations';
 import type { ReviewDecisionInput } from './workflow';
 import { termStatusTone, termStatusLabel, contractStatusLabel } from './customerHistory';
+import { acceptFinanceDocument, REQUIRED_FINANCE_DOCUMENTS } from './financeDocuments';
+
+function acknowledgeDocuments(d: Parameters<typeof acceptFinanceDocument>[0]): void {
+  for (const id of REQUIRED_FINANCE_DOCUMENTS) acceptFinanceDocument(d, id);
+}
 
 const decision: ReviewDecisionInput = {
   approve: true,
@@ -45,6 +50,7 @@ describe('Siamchai DCR Workflow & Domain Rules', () => {
     expect(() => submit(d)).toThrow();
     setContractType(d, 'CASH');
     expect(d.credit.status).toBe('normal');
+    acknowledgeDocuments(d);
     expect(() => submit(d)).not.toThrow();
     expect(() => setContractType(d, 'NORMAL')).toThrow();
   });
@@ -88,6 +94,7 @@ describe('Siamchai DCR Workflow & Domain Rules', () => {
     const d = seeds()[0];
     d.photos.place = [];
     d.location.lat = '';
+    acknowledgeDocuments(d);
     submit(d);
     expect(status(d).key).toBe('submitted');
     recordSale(d, '2026-10-22');
@@ -124,6 +131,7 @@ describe('Siamchai DCR Workflow & Domain Rules', () => {
       expect(openingChecks[openingChecks.length - 1].ok).toBe(pass);
     }
     const d = seeds()[0];
+    acknowledgeDocuments(d);
     submit(d);
     expect(() => recordSale(d, '2026-02-31')).toThrow();
     d.saleDate = '2026-01-31';
@@ -135,6 +143,7 @@ describe('Siamchai DCR Workflow & Domain Rules', () => {
     const d = seeds()[0];
     expect(() => recordSale(d)).toThrow();
     expect(() => openContract(d)).toThrow();
+    acknowledgeDocuments(d);
     submit(d);
     expect(() => submit(d)).toThrow();
     recordSale(d);
@@ -172,10 +181,12 @@ describe('Siamchai DCR Workflow & Domain Rules', () => {
     expect(() => decideReview(d, 'inspector', decision)).toThrow();
     decideReview(d, 'inspector2', decision);
     expect(d.credit.decisions.length).toBe(2);
+    acknowledgeDocuments(d);
     submit(d);
     const single = seeds()[0];
     requestReview(single, 'review');
     decideReview(single, 'inspector', decision);
+    acknowledgeDocuments(single);
     expect(status(single).key).toBe('ready');
   });
 
@@ -259,7 +270,9 @@ describe('Siamchai DCR Workflow & Domain Rules', () => {
   });
 
   test('signature policy stays optional; schedule month end remains correct', () => {
-    submit(seeds()[0]);
+    const d = seeds()[0];
+    acknowledgeDocuments(d);
+    submit(d);
     openContract(seeds()[1]);
     const rows = schedule({ firstDue: '2026-11-29', dueDay: 29, months: 11, monthly: 1500 });
     expect(rows[3].date.getDate()).toBe(28);

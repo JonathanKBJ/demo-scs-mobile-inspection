@@ -2,6 +2,7 @@ import type { ContractDraft, ContractType, UserRole } from '../types/contract';
 import { localDay } from './calculations';
 import { createDemoHistory, historyRiskLabel } from './customerHistory';
 import type { HistoryPerson, HistoryScenario } from './customerHistory';
+import { acceptFinanceDocument, REQUIRED_FINANCE_DOCUMENTS } from './financeDocuments';
 import {
   checklist,
   editable,
@@ -386,13 +387,15 @@ export function seeds(): ContractDraft[] {
     demo: true,
   }));
   a.history = [
-    { at: a.createdAt, text: 'ร่างผ่านการตรวจสาธิต พร้อมทำขาย • รูปรับสินค้าเพิ่มก่อนเปิดสัญญา', by: a.owner },
+    { at: a.createdAt, text: 'ร่างผ่านการตรวจประวัติสาธิต • รออ่านและยืนยันเอกสารก่อนทำขาย', by: a.owner },
   ];
 
   const b = JSON.parse(JSON.stringify(a)) as ContractDraft;
   b.id = 'DEMO-202610-002';
   b.buyer.first = 'สมชาย';
   inspectDemoHistory(b, 'buyer', 'normal', b.owner);
+  // Only the sold DEMO fixture has simulated acknowledgments, never an editable customer draft.
+  for (const id of REQUIRED_FINANCE_DOCUMENTS) acceptFinanceDocument(b, id);
   submit(b);
   recordSale(b);
 
@@ -400,6 +403,8 @@ export function seeds(): ContractDraft[] {
   first.setDate(first.getDate() + 35);
   b.terms.firstDue = localDay(first);
   b.terms.dueDay = first.getDate();
+  // Seed-only restamp: the final simulated payment schedule differs from the pre-sale fixture.
+  for (const id of REQUIRED_FINANCE_DOCUMENTS) acceptFinanceDocument(b, id);
   b.photos.delivery = [
     {
       id: 'delivery2',
@@ -410,7 +415,7 @@ export function seeds(): ContractDraft[] {
       demo: true,
     },
   ];
-  b.history = [{ at: b.soldAt!, text: 'รับผลขายพร้อมเลขที่ขาย (จำลอง) • รอตรวจและเปิดสัญญา', by: b.owner }];
+  b.history = [{ at: b.soldAt!, text: 'DEMO • รับผลขายและจำลองการยืนยันเอกสาร • รอตรวจและเปิดสัญญา', by: b.owner }];
 
   const c = JSON.parse(JSON.stringify(a)) as ContractDraft;
   c.id = 'DEMO-202610-003';

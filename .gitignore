@@ -33,3 +33,6 @@ Thumbs.db
 # Tool caches
 .vite/
 .vercel/
+
+# Local test & design review artifacts
+.impeccable/

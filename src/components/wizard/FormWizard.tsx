@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { useContractStore } from '../../store/useContractStore';
 import { CustomerDossierBar } from './CustomerDossierBar';
 import { HistoryStep } from './HistoryStep';
+import { FinanceAgreementStep } from './FinanceAgreementStep';
+import { financeDocumentsComplete } from '../../domain/financeDocuments';
 import {
   STEPS,
   usesGuarantor,
@@ -30,7 +32,6 @@ import {
   Camera,
   MapPin,
   Sparkles,
-  FileCheck,
   Send,
   Upload,
   X,
@@ -109,7 +110,7 @@ export const FormWizard: React.FC = () => {
   const allOpeningOk = checklist(d, 'opening').every((c) => c.ok);
 
   const canGoPrev = activeStep > 0;
-  const canGoNext = activeStep < STEPS.length - 1;
+  const canGoNext = activeStep < STEPS.length - 1 && (activeStep !== 7 || financeDocumentsComplete(d));
 
   // Step 5 GPS native handler
   const handleGetGps = async () => {
@@ -299,6 +300,95 @@ export const FormWizard: React.FC = () => {
                     <option value="อยู่กับญาติ">อยู่กับญาติ</option>
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">อายุ (ปี)</label>
+                  <input
+                    type="number"
+                    placeholder="เช่น 30"
+                    value={d.buyer.age ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.buyer.age = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">สัญชาติ</label>
+                  <input
+                    type="text"
+                    placeholder="ไทย"
+                    value={d.buyer.nationality ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.buyer.nationality = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">LINE ID</label>
+                  <input
+                    type="text"
+                    placeholder="LINE ID ผู้ซื้อ"
+                    value={d.buyer.lineId ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.buyer.lineId = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">ระยะเวลาที่พักอาศัย</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น 3 ปี"
+                    value={d.buyer.residenceYears ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.buyer.residenceYears = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">อาศัยอยู่กับ</label>
+                  <select
+                    value={d.buyer.liveWith ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.buyer.liveWith = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  >
+                    <option value="">เลือก</option>
+                    <option value="คนเดียว">คนเดียว</option>
+                    <option value="บิดามารดา">บิดามารดา</option>
+                    <option value="คู่สมรส">คู่สมรส</option>
+                    <option value="ญาติ">ญาติ</option>
+                    <option value="เพื่อน">เพื่อน</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">จำนวนผู้อยู่อาศัยด้วย (คน)</label>
+                  <input
+                    type="number"
+                    placeholder="เช่น 2"
+                    value={d.buyer.dependentsCount ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.buyer.dependentsCount = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
               </div>
             </div>
 
@@ -450,6 +540,111 @@ export const FormWizard: React.FC = () => {
                   className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
                 />
               </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">ตำแหน่ง</label>
+                <input
+                  type="text"
+                  placeholder="เช่น พนักงานขาย, เจ้าหน้าที่"
+                  value={d.buyer.position ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.position = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">อายุงาน</label>
+                <input
+                  type="text"
+                  placeholder="เช่น 2 ปี 6 เดือน"
+                  value={d.buyer.tenure ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.tenure = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">รายได้อื่นๆ (บาท)</label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={d.buyer.otherIncome ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.otherIncome = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">ประเภทธุรกิจ</label>
+                <select
+                  value={d.buyer.businessType ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.businessType = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                >
+                  <option value="">เลือกประเภทธุรกิจ</option>
+                  <option value="บริษัทเอกชน">บริษัทเอกชน</option>
+                  <option value="รับราชการ">รับราชการ</option>
+                  <option value="รัฐวิสาหกิจ">รัฐวิสาหกิจ</option>
+                  <option value="ธุรกิจส่วนตัว">ธุรกิจส่วนตัว</option>
+                  <option value="อาชีพอิสระ">อาชีพอิสระ</option>
+                  <option value="รับจ้างชั่วคราว">รับจ้างชั่วคราว</option>
+                  <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">แผนก</label>
+                <input
+                  type="text"
+                  placeholder="เช่น แผนกบัญชี / บริการ"
+                  value={d.buyer.workDepartment ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.workDepartment = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">เวลาที่สะดวกติดต่อ</label>
+                <input
+                  type="text"
+                  placeholder="เช่น 09:00 - 18:00 น."
+                  value={d.buyer.contactTime ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.contactTime = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">สถานที่ทำงานเดิม (ถ้าปัจจุบันต่ำกว่า 6 เดือน)</label>
+                <input
+                  type="text"
+                  placeholder="ชื่อบริษัทหรือสถานที่ทำงานเดิม"
+                  value={d.buyer.previousCompany ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.buyer.previousCompany = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
@@ -541,6 +736,90 @@ export const FormWizard: React.FC = () => {
                   onChange={(e) =>
                     updateActiveDraft((draft) => {
                       draft.guarantor.relation = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">อายุผู้ค้ำ (ปี)</label>
+                <input
+                  type="number"
+                  placeholder="เช่น 35"
+                  value={d.guarantor.age ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.guarantor.age = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">LINE ID ผู้ค้ำ</label>
+                <input
+                  type="text"
+                  placeholder="LINE ID ผู้ค้ำ"
+                  value={d.guarantor.lineId ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.guarantor.lineId = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">ระยะเวลาที่พักอาศัย</label>
+                <input
+                  type="text"
+                  placeholder="เช่น 5 ปี"
+                  value={d.guarantor.residenceYears ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.guarantor.residenceYears = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">ตำแหน่งงาน</label>
+                <input
+                  type="text"
+                  placeholder="ตำแหน่งงานผู้ค้ำ"
+                  value={d.guarantor.position ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.guarantor.position = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">เบอร์โทรที่ทำงานผู้ค้ำ</label>
+                <input
+                  type="tel"
+                  placeholder="เบอร์โทรที่ทำงาน"
+                  value={d.guarantor.workPhone ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.guarantor.workPhone = e.target.value;
+                    })
+                  }
+                  className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">อายุงานผู้ค้ำ</label>
+                <input
+                  type="text"
+                  placeholder="เช่น 3 ปี"
+                  value={d.guarantor.tenure ?? ''}
+                  onChange={(e) =>
+                    updateActiveDraft((draft) => {
+                      draft.guarantor.tenure = e.target.value;
                     })
                   }
                   className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
@@ -662,6 +941,62 @@ export const FormWizard: React.FC = () => {
                       })
                     }
                     className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">ประเภทสินค้า</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น โทรศัพท์มือถือ, เครื่องใช้ไฟฟ้า"
+                    value={d.terms.productType ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.terms.productType = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">ยี่ห้อ</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น Apple, Samsung"
+                    value={d.terms.brand ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.terms.brand = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">รุ่น</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น iPhone 16 Pro"
+                    value={d.terms.model ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.terms.model = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1">หมายเลขเครื่อง / Serial No.</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น IMEI / Serial"
+                    value={d.terms.serial ?? ''}
+                    onChange={(e) =>
+                      updateActiveDraft((draft) => {
+                        draft.terms.serial = e.target.value;
+                      })
+                    }
+                    className="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl mono"
                   />
                 </div>
               </div>
@@ -922,17 +1257,7 @@ export const FormWizard: React.FC = () => {
         );
 
       case 7:
-        // Step 7: เอกสารและลายเซ็น
-        return (
-          <div className="card p-6 bg-white rounded-2xl border border-slate-200 text-center space-y-4">
-            <FileCheck className="w-12 h-12 text-slate-400 mx-auto" />
-            <h3 className="text-base font-bold text-slate-900">เอกสารและลายเซ็นอิเล็กทรอนิกส์</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              ในเวอร์ชันต้นแบบ ระบบจำลองการลงนามและเตรียมเอกสารสัญญาเช่าซื้อไว้พร้อมแล้ว
-              สามารถข้ามไปตรวจความครบถ้วนและกดส่งทำขายได้ทันที
-            </p>
-          </div>
-        );
+        return <FinanceAgreementStep />;
 
       case 8:
         // Step 8: ตรวจความครบถ้วน & ทำขายเปิดสัญญา

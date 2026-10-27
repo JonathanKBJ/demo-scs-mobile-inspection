@@ -341,7 +341,8 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       d.pageGroup = 'เพจสาขาตัวอย่าง นนทบุรี';
       d.financeStaff = 'น.ส. สุชาดา (สินเชื่อพื้นที่ 01)';
-      d.documentReviewed = true;
+      d.documentReviewed = false;
+      delete d.financeAcceptances;
 
       d.photos.id = [
         { id: 'bid1', src: demoImage('บัตรผู้ซื้อ'), name: 'บัตร ปชช. ผู้ซื้อ', at: d.createdAt, by: user.name, demo: true },

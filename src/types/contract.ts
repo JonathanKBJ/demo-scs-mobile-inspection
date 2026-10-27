@@ -23,6 +23,12 @@ export interface BuyerInfo {
   gender: 'ชาย' | 'หญิง' | '';
   phone: string;
   email: string;
+  age?: string | number;
+  nationality?: string;
+  lineId?: string;
+  residenceYears?: string;
+  liveWith?: string;
+  dependentsCount?: string | number;
   marital: string;
   homeType: string;
   address: string;
@@ -43,6 +49,10 @@ export interface BuyerInfo {
   income: string | number;
   otherIncome: string | number;
   workPhone: string;
+  businessType?: string;
+  workDepartment?: string;
+  contactTime?: string;
+  previousCompany?: string;
   workAddress: string;
 }
 
@@ -54,15 +64,28 @@ export interface GuarantorInfo {
   last: string;
   phone: string;
   relation: string;
+  age?: string | number;
+  lineId?: string;
+  residenceYears?: string;
   address: string;
   job: string;
   income: string | number;
   company: string;
+  position?: string;
+  workDepartment?: string;
+  workPhone?: string;
+  tenure?: string;
   workAddress: string;
 }
 
 export interface ContractTerms {
   product: string;
+  brand?: string;
+  model?: string;
+  serial?: string;
+  productType?: string;
+  totalHirePurchasePrice?: string | number;
+  lastDue?: string;
   qty: number;
   price: string | number;
   down: string | number;
@@ -114,6 +137,14 @@ export interface HistoryItem {
   by: string;
 }
 
+export type FinanceDocumentId = 'hirePurchase' | 'disclosure' | 'payment' | 'annex';
+
+export interface FinanceDocumentAcceptance {
+  at: string;
+  snapshot: string;
+  version: string;
+}
+
 export interface ContractDraft {
   id: string;
   createdAt: string;
@@ -140,6 +171,7 @@ export interface ContractDraft {
   signatures: Record<string, string>;
   signedSnapshot: string;
   documentReviewed: boolean;
+  financeAcceptances?: Partial<Record<FinanceDocumentId, FinanceDocumentAcceptance>>;
   submittedAt: string | null;
   soldAt: string | null;
   saleDate: string;

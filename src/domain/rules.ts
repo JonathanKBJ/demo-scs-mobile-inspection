@@ -1,5 +1,6 @@
 import type { ContractDraft, ChecklistItem, ContractStatus } from '../types/contract';
 import { firstDueDays } from './calculations';
+import { financeDocumentsComplete } from './financeDocuments';
 
 export const STEPS = [
   'ตัวตน / ประวัติ',
@@ -9,7 +10,7 @@ export const STEPS = [
   'สินค้าและงวดผ่อน',
   'พิกัดติดตาม',
   'รูปหลักฐาน',
-  'เอกสารและลายเซ็น',
+  'เอกสารและการยืนยัน',
   'ตรวจความครบถ้วน',
 ] as const;
 
@@ -69,6 +70,7 @@ export function checklist(d: ContractDraft, phase: 'sale' | 'opening' = d.soldAt
   const t = d.terms;
   const l = d.location;
   const opening = phase === 'opening';
+  const documentsComplete = financeDocumentsComplete(d);
 
   const current =
     b.currentSame ||
@@ -192,12 +194,12 @@ export function checklist(d: ContractDraft, phase: 'sale' | 'opening' = d.soldAt
         : 'เตรียมไว้ก่อนได้ • ตรวจหลักฐานและรูป GPS 5 รูปก่อนเปิดสัญญา',
     },
     {
-      label: 'เอกสารและลายเซ็น',
+      label: 'เอกสารและการยืนยัน',
       step: 7,
-      ok: true,
-      detail: signedChanged(d)
-        ? 'ข้อมูลเปลี่ยนหลังลงนาม กรุณาตรวจทาน • จังหวะเซ็นรอยืนยัน'
-        : 'ทดลองลงนามได้ • จังหวะและกฎบังคับรอยืนยัน',
+      ok: documentsComplete,
+      detail: documentsComplete
+        ? 'ยืนยันเอกสารทั้ง 4 รายการตามข้อมูลปัจจุบันแล้ว (สาธิต ไม่ใช่ลายเซ็นจริง)'
+        : 'อ่านและยืนยันเอกสารทั้ง 4 รายการใหม่เมื่อข้อมูลหรือรุ่นเอกสารเปลี่ยน',
     },
     {
       label: 'วันชำระงวดแรก',

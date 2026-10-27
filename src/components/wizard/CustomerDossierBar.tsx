@@ -19,7 +19,7 @@ export const CustomerDossierBar: React.FC = () => {
   const checks = checklist(activeDraft, activeDraft.soldAt ? 'opening' : 'sale');
   const stepOk = (i: number) => {
     if (i === 8) return checks.every((c) => c.ok);
-    if (i === 7 || (!activeDraft.soldAt && [5, 6].includes(i))) return false;
+    if (!activeDraft.soldAt && [5, 6].includes(i)) return false;
     return checks.filter((c) => c.step === i).every((c) => c.ok);
   };
 
